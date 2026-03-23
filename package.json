@@ -36,6 +36,7 @@
     "./server/base": "./dist/server/base.js",
     "./server/components": "./dist/server/components/index.js",
     "./server/components/has-islands": "./dist/server/components/has-islands.js",
+    "./server/components/inline-script": "./dist/server/components/inline-script.js",
     "./server/components/link": "./dist/server/components/link.js",
     "./server/components/script": "./dist/server/components/script.js",
     "./server/context-storage": "./dist/server/context-storage.js",
