@@ -640,6 +640,75 @@ describe('<Script /> component', () => {
   })
 })
 
+describe('<InlineScript /> component', () => {
+  const ROUTES = import.meta.glob('../mocks/app-inline-script/routes/**/index.tsx', {
+    eager: true,
+  })
+  const RENDERER = import.meta.glob('../mocks/app-inline-script/routes/**/_renderer.tsx', {
+    eager: true,
+  })
+  const app = createApp({
+    root: '../mocks/app-inline-script/routes',
+    ROUTES: ROUTES as any,
+    RENDERER: RENDERER as any,
+  })
+
+  describe('With src', () => {
+    it('Should embed bundled inline script content for absolute entry path', async () => {
+      const res = await app.request('/absolute')
+      const html = await res.text()
+
+      expect(res.status).toBe(200)
+      expect(html).toContain('<script nonce="hono">')
+      expect(html).toContain('</script>')
+      expect(html).toContain('.dataset.theme')
+      expect(html).toContain('dark')
+
+      // Should strip TypeScript-specific syntax.
+      expect(html).not.toContain('enum Theme')
+      expect(html).not.toContain('Theme.Light')
+      expect(html).not.toContain('Theme.Dark')
+      expect(html).not.toContain(': Theme')
+
+      // Should not be escaped.
+      expect(html).not.toContain('&quot;')
+
+      // Should be wrapped in IIFE format.
+      expect(html).toContain('(()=>{')
+      expect(html).toContain('})();')
+
+      // Should not have source maps.
+      expect(html).not.toContain('//# sourceMappingURL=')
+    })
+
+    it('Should throw Internal Server Error for relative entry path', async () => {
+      const res = await app.request('/relative')
+      const html = await res.text()
+
+      expect(res.status).toBe(500)
+      expect(html).toBe('Internal Server Error')
+    })
+
+    it('Should throw Internal Server Error for entry path that does not exist', async () => {
+      const res = await app.request('/not-exist')
+      const html = await res.text()
+
+      expect(res.status).toBe(500)
+      expect(html).toBe('Internal Server Error')
+    })
+  })
+
+  describe('Without src', () => {
+    it('Should throw Internal Server Error if entry path is not provided', async () => {
+      const res = await app.request('/not-provided')
+      const html = await res.text()
+
+      expect(res.status).toBe(500)
+      expect(html).toBe('Internal Server Error')
+    })
+  })
+})
+
 describe('<Link /> component', () => {
   const ROUTES = import.meta.glob('../mocks/app-link/routes/**/index.tsx', {
     eager: true,
